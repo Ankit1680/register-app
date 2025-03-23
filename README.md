@@ -195,7 +195,5 @@ $ kubectl get nodes
 
 13 ) $ kubectl get svc
 # Cleanup 
-$ kubectl get all
-$ kubectl delete deployment.apps/virtualtechbox-regapp       
-$ kubectl delete service/virtualtechbox-service              
+$ kubectl get all            
 $ eksctl delete cluster ankit-devops-eks-cluster --region ap-south-1     OR    eksctl delete cluster --region=ap-south-1 --name=ankit-devops-cluster      

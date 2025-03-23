@@ -67,5 +67,5 @@
 
   <h1>Thank You</h1>
   <br />
-  <h1>Automated CICD with gitops..</h1>
+  <h1>Automated CICD with gitops argocd</h1>
 </form>

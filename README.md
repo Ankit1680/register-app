@@ -1,4 +1,4 @@
-============================================================= Install and Configure the Jenkins-Master & Jenkins-Agent =============================================================
+### Install and Configure the Jenkins-Master & Jenkins-Agent 
 ## Install Java
 $ sudo apt update
 $ sudo apt upgrade

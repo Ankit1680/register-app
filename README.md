@@ -1,4 +1,7 @@
-### Install and Configure the Jenkins-Master & Jenkins-Agent 
+# To cleanup space in Jenkins Agent
+$ docker system prune -a -f --volumes
+
+# Install and Configure the Jenkins-Master & Jenkins-Agent 
 ## Install Java
 $ sudo apt update
 $ sudo apt upgrade
@@ -25,7 +28,7 @@ $ sudo service sshd reload
 $ ssh-keygen OR $ ssh-keygen -t ed25519
 $ cd .ssh
 
-============================================================= Install and Configure the SonarQube =============================================================
+# Install and Configure the SonarQube 
 ## Update Package Repository and Upgrade Packages
     $ sudo apt update
     $ sudo apt upgrade
@@ -115,7 +118,7 @@ $ sudo vim /etc/systemd/system/sonar.service
 ## Watch log files and monitor for startup
      $ sudo tail -f /opt/sonarqube/logs/sonar.log
 
-============================================================= Setup Bootstrap Server for eksctl and Setup Kubernetes using eksctl =============================================================
+# Setup Bootstrap Server for eksctl and Setup Kubernetes using eksctl 
 ## Install AWS Cli on the above EC2
 Refer--https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 $ sudo su
@@ -146,14 +149,14 @@ $ eksctl version
 
 ## Setup Kubernetes using eksctl
 Refer--https://github.com/aws-samples/eks-workshop/issues/734
-$ eksctl create cluster --name virtualtechbox-cluster \
+$ eksctl create cluster --name ankitdevops-cluster \
 --region ap-south-1 \
 --node-type t2.small \
 --nodes 3 \
 
 $ kubectl get nodes
 
-============================================================= ArgoCD Installation on EKS Cluster and Add EKS Cluster to ArgoCD =============================================================
+# ArgoCD Installation on EKS Cluster and Add EKS Cluster to ArgoCD 
 1 ) First, create a namespace
     $ kubectl create namespace argocd
 
@@ -188,11 +191,11 @@ $ kubectl get nodes
      $ kubectl config get-contexts
 
 12 ) Add above EKS cluster to ArgoCD with below command
-     $ argocd cluster add i-08b9d0ff0409f48e7@virtualtechbox-cluster.ap-south-1.eksctl.io --name virtualtechbox-eks-cluster
+     $ argocd cluster add i-08b9d0ff0409f48e7@ankit-devops-cluster.ap-south-1.eksctl.io --name ankit-devops-eks-cluster
 
 13 ) $ kubectl get svc
-============================================================= Cleanup =============================================================
+# Cleanup 
 $ kubectl get all
-$ kubectl delete deployment.apps/virtualtechbox-regapp       //it will delete the deployment
-$ kubectl delete service/virtualtechbox-service              //it will delete the service
-$ eksctl delete cluster virtualtechbox --region ap-south-1     OR    eksctl delete cluster --region=ap-south-1 --name=virtualtechbox-cluster      //it will delete the EKS cluster
+$ kubectl delete deployment.apps/virtualtechbox-regapp       
+$ kubectl delete service/virtualtechbox-service              
+$ eksctl delete cluster ankit-devops-eks-cluster --region ap-south-1     OR    eksctl delete cluster --region=ap-south-1 --name=ankit-devops-cluster      

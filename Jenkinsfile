@@ -1,11 +1,11 @@
 pipeline { 
-    agent { label 'build-node' } 
+    agent { label 'Jenkins-Agent' } 
     tools { 
         jdk 'java17' 
         maven 'maven3' 
     } 
     environment { 
-     APP_NAME = "register-app-pipeline" 
+        APP_NAME = "register-app-pipeline" 
             RELEASE = "1.0.0" 
             DOCKER_USER = "ankit2849" 
             DOCKER_PASS = "docker-cred" 

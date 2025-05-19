@@ -1,111 +1,65 @@
-pipeline { 
-    agent { label 'Jenkins-Agent' } 
-    tools { 
-        jdk 'java17' 
-        maven 'maven3' 
-    } 
-    environment { 
-        APP_NAME = "register-app-pipeline" 
-            RELEASE = "1.0.0" 
-            DOCKER_USER = "ankit2849" 
-            DOCKER_PASS = "docker-cred" 
-            IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}" 
-            IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}" 
-    } 
-    stages{ 
-        stage("Cleanup Workspace"){ 
-                steps { 
-                cleanWs() 
-                } 
-        } 
- 
-        stage("Checkout from SCM"){ 
-                steps { 
-                    git branch: 'main', credentialsId: 'github-cred', url: 'https://github.com/Ankit1680/register-app' 
-                } 
-        } 
- 
-        stage("Build Application"){ 
-            steps { 
-                sh "mvn clean package" 
-            } 
- 
-       } 
- 
-       stage("Test Application"){ 
-           steps { 
-                 sh "mvn test" 
-           } 
-       } 
- 
-       stage("SonarQube Analysis"){ 
-           steps { 
-            script { 
-          withSonarQubeEnv(credentialsId: 'sonar-token') { 
-                sh "mvn sonar:sonar" 
-          } 
-            }  
-           } 
-       } 
- 
-    //    stage("Quality Gate"){ 
-    //        steps { 
-    //            script { 
-    //                 waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
-    //             }  
-    //         } 
- 
-    //     } 
- 
-        stage("Build & Push Docker Image") { 
-            steps { 
-                script { 
-                    docker.withRegistry('',DOCKER_PASS) { 
-                        docker_image = docker.build "${IMAGE_NAME}" 
-                    } 
- 
-                    docker.withRegistry('',DOCKER_PASS) { 
-                        docker_image.push("${IMAGE_TAG}") 
-                        docker_image.push('latest') 
-                    } 
-                } 
-            } 
- 
-       } 
+pipeline {
+    agent { label 'Jenkins-Agent' }
 
- 
-       stage ('Cleanup Artifacts') { 
-           steps { 
-               script { 
-                    sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}" 
-                    sh "docker rmi ${IMAGE_NAME}:latest" 
-               } 
-          } 
-       } 
- 
-    //    stage("Trigger CD Pipeline") { 
-    //         steps { 
-    //             script { 
-    //                 sh "curl -v -k --user clouduser:${JENKINS_API_TOKEN} -X POST -H 'cache-control: 
-// no-cache' -H 'content-type: application/x-www-form-urlencoded' --data 
-// 'IMAGE_TAG=${IMAGE_TAG}' 'ec2-13-235-27-140.ap-south
-// 1.compute.amazonaws.com:8080/job/register-app-cd
-// pipeline/buildWithParameters?token=gitops-token'" 
-    //             } 
-    //         } 
-    //    } 
-    } 
- 
-//     post { 
-//        failure { 
-//              emailext body: '''${SCRIPT, template="groovy-html.template"}''',  
-//                       subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed",  
-//                       mimeType: 'text/html',to: "avishwakarma8855@gmail.com" 
-//       } 
-//       success { 
-//             emailext body: '''${SCRIPT, template="groovy-html.template"}''',  
-//                      subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful",  
-//                      mimeType: 'text/html',to: "avishwakarma8855@gmail.com" 
-//       }       
-//    } 
+    tools {
+        jdk 'java17'
+        maven 'maven3'
+    }
+
+    parameters {
+        string(name: 'APP_NAME', description: 'Name of the application')
+        string(name: 'REPO_LINK', description: 'GitHub repository URL')
+        string(name: 'RELEASE', defaultValue: '1.0.0', description: 'Release version')
+        string(name: 'ORG_NAME', description: 'GitHub organization name')
+        string(name: 'TECH_STACK', description: 'Primary tech stack/language')
+    }
+
+    environment {
+        BUILD_VERSION = "${params.RELEASE}-${env.BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout from SCM') {
+            steps {
+                git branch: 'main', credentialsId: 'github-cred', url: "${params.REPO_LINK}"
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Test Application') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Post-Build Info') {
+            steps {
+                echo "✅ Build version: ${BUILD_VERSION}"
+                echo "📦 Repo: ${params.REPO_LINK}"
+                echo "👤 Org: ${params.ORG_NAME}"
+                echo "📌 Tech Stack: ${params.TECH_STACK}"
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo "❌ Build failed for ${params.APP_NAME}"
+        }
+        success {
+            echo "✅ Build succeeded for ${params.APP_NAME}"
+        }
+    }
 }

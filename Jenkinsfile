@@ -47,7 +47,7 @@ pipeline {
         stage('Post-Build Info') {
             steps {
                 echo " Build version: ${BUILD_VERSION}"
-                echo " Repo: ${params.REPO_LINK}"
+                echo "📦 Repo: ${params.REPO_LINK}"
                 echo "👤 Org: ${params.ORG_NAME}"
                 echo "📌 Tech Stack: ${params.TECH_STACK}"
             }

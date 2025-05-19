@@ -48,18 +48,18 @@ pipeline {
             steps {
                 echo " Build version: ${BUILD_VERSION}"
                 echo " Repo: ${params.REPO_LINK}"
-                echo "👤 Org: ${params.ORG_NAME}"
-                echo "📌 Tech Stack: ${params.TECH_STACK}"
+                echo " Org: ${params.ORG_NAME}"
+                echo " Tech Stack: ${params.TECH_STACK}"
             }
         }
     }
 
     post {
         failure {
-            echo "❌ Build failed for ${params.APP_NAME}"
+            echo " Build failed for ${params.APP_NAME}"
         }
         success {
-            echo "✅ Build succeeded for ${params.APP_NAME}"
+            echo " Build succeeded for ${params.APP_NAME}"
         }
     }
 }

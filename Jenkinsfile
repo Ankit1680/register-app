@@ -7,15 +7,16 @@ pipeline {
     }
 
     parameters {
-        string(name: 'APP_NAME', description: 'Name of the application')
-        string(name: 'REPO_LINK', description: 'GitHub repository URL')
+        string(name: 'REPO_NAME', description: 'Name of the GitHub repository')
+        string(name: 'REPO_URL', description: 'GitHub repository URL')
+        string(name: 'ORG_NAME', description: 'GitHub organization or user name')
+        string(name: 'LANGUAGE', description: 'Primary programming language')
         string(name: 'RELEASE', defaultValue: '1.0.0', description: 'Release version')
-        string(name: 'ORG_NAME', description: 'GitHub organization name')
-        string(name: 'TECH_STACK', description: 'Primary tech stack/language')
     }
 
     environment {
         BUILD_VERSION = "${params.RELEASE}-${env.BUILD_NUMBER}"
+        APP_NAME = "${params.REPO_NAME}"
     }
 
     stages {
@@ -28,17 +29,27 @@ pipeline {
 
         stage('Checkout from SCM') {
             steps {
-                git branch: 'main', credentialsId: 'github-cred', url: "${params.REPO_LINK}"
+                git branch: 'main', credentialsId: 'github-cred', url: "${params.REPO_URL}"
             }
         }
 
         stage('Build Application') {
+            when {
+                expression {
+                    params.LANGUAGE.toLowerCase() == 'java'
+                }
+            }
             steps {
                 sh 'mvn clean package'
             }
         }
 
         stage('Test Application') {
+            when {
+                expression {
+                    params.LANGUAGE.toLowerCase() == 'java'
+                }
+            }
             steps {
                 sh 'mvn test'
             }
@@ -46,20 +57,20 @@ pipeline {
 
         stage('Post-Build Info') {
             steps {
-                echo " Build version: ${BUILD_VERSION}"
-                echo " Repo: ${params.REPO_LINK}"
-                echo " Org: ${params.ORG_NAME}"
-                echo " Tech Stack: ${params.TECH_STACK}"
+                echo "Build version: ${BUILD_VERSION}"
+                echo "Repo: ${params.REPO_URL}"
+                echo "Org: ${params.ORG_NAME}"
+                echo "Tech Stack: ${params.LANGUAGE}"
             }
         }
     }
 
     post {
         failure {
-            echo " Build failed for ${params.APP_NAME}"
+            echo "❌ Build failed for ${APP_NAME}"
         }
         success {
-            echo " Build succeeded for ${params.APP_NAME}"
+            echo "✅ Build succeeded for ${APP_NAME}"
         }
     }
 }

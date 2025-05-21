@@ -68,10 +68,10 @@ pipeline {
 
     post {
         failure {
-            echo "❌ Build failed for ${APP_NAME}"
+            echo "Build failed for ${APP_NAME}"
         }
         success {
-            echo "✅ Build succeeded for ${APP_NAME}"
+            echo "Build succeeded for ${APP_NAME}"
         }
     }
 }

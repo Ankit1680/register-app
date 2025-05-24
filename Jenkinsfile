@@ -1,5 +1,4 @@
 pipeline {
-    // agent { label 'Jenkins-Agent' }
     agent any
 
     tools {
@@ -13,6 +12,7 @@ pipeline {
         string(name: 'ORG_NAME', description: 'GitHub organization or user name')
         string(name: 'LANGUAGE', description: 'Primary programming language')
         string(name: 'RELEASE', defaultValue: '1.0.0', description: 'Release version')
+        string(name: 'GIT_TOKEN_ID', description: 'Jenkins credentials ID for GitHub access')
     }
 
     environment {
@@ -21,8 +21,7 @@ pipeline {
     }
 
     stages {
-
-        stage('Cleanup Workspace') {
+        stage('Cleanup') {
             steps {
                 cleanWs()
             }
@@ -34,44 +33,62 @@ pipeline {
             }
         }
 
-        stage('Build Application') {
-            when {
-                expression {
-                    params.LANGUAGE.toLowerCase() == 'java'
-                }
-            }
+
+        stage('Determine Final Tech Stack') {
             steps {
-                sh 'mvn clean package'
+                script {
+                    def detectedStack = ''
+                    if (fileExists('pom.xml')) {
+                        detectedStack = 'java'
+                    } else if (fileExists('package-lock.json') || fileExists('package.json')) {
+                        detectedStack = 'nodejs'
+                    } else if (fileExists('app.py') || fileExists('requirements.txt')) {
+                        detectedStack = 'python'
+                    } else {
+                        error "Unable to detect a valid tech stack from repo files"
+                    }
+
+                    env.FINAL_TECH_STACK = detectedStack
+                    echo "Confirmed Tech Stack: ${env.FINAL_TECH_STACK}"
+                }
             }
         }
 
-        stage('Test Application') {
-            when {
-                expression {
-                    params.LANGUAGE.toLowerCase() == 'java'
-                }
-            }
+        stage('Trigger Final Pipeline') {
             steps {
-                sh 'mvn test'
-            }
-        }
+                script {
+                    def finalJobName = ''
+                    if (env.FINAL_TECH_STACK == 'java') {
+                        finalJobName = 'springboot-pipeline'
+                    } else if (env.FINAL_TECH_STACK == 'nodejs') {
+                        finalJobName = 'node-pipeline'
+                    } else if (env.FINAL_TECH_STACK == 'python') {
+                        finalJobName = 'python-pipeline'
+                    } else {
+                        error "No matching pipeline for detected tech stack: ${env.FINAL_TECH_STACK}"
+                    }
 
-        stage('Post-Build Info') {
-            steps {
-                echo "Build version: ${BUILD_VERSION}"
-                echo "Repo: ${params.REPO_URL}"
-                echo "Org: ${params.ORG_NAME}"
-                echo "Tech Stack: ${params.LANGUAGE}"
+                    echo "Triggering job: ${finalJobName}"
+
+                    build job: finalJobName, wait: false, parameters: [
+                        string(name: 'REPO_NAME', value: params.REPO_NAME),
+                        string(name: 'REPO_URL', value: params.REPO_URL),
+                        string(name: 'ORG_NAME', value: params.ORG_NAME),
+                        string(name: 'LANGUAGE', value: env.FINAL_TECH_STACK),
+                        string(name: 'RELEASE', value: params.RELEASE),
+                        string(name: 'GIT_TOKEN_ID', value: params.GIT_TOKEN_ID)
+                    ]
+                }
             }
         }
     }
 
     post {
         failure {
-            echo "Build failed for ${APP_NAME}"
+            echo "Dispatcher failed for ${APP_NAME}"
         }
         success {
-            echo "Build succeeded for ${APP_NAME}"
+            echo "Dispatcher succeeded for ${APP_NAME}"
         }
     }
 }

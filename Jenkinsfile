@@ -27,11 +27,23 @@ pipeline {
             }
         }
 
+        // stage('Checkout from SCM') {
+        //     steps {
+        //         git branch: 'main', credentialsId: 'github-cred', url: "${params.REPO_URL}"
+        //     }
+        // }
+
         stage('Checkout from SCM') {
             steps {
-                git branch: 'main', credentialsId: 'github-cred', url: "${params.REPO_URL}"
+                withCredentials([string(credentialsId: "${params.GIT_TOKEN_ID}", variable: 'GIT_TOKEN')]) {
+                    script {
+                        def repoWithToken = params.REPO_URL.replace('https://', "https://${GIT_TOKEN}@")
+                        git branch: 'master', url: repoWithToken
+                    }
+                }
             }
         }
+
 
 
         stage('Determine Final Tech Stack') {
